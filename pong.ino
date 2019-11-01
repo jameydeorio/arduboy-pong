@@ -3,7 +3,7 @@
 Arduboy2 arduboy;
 
 const int FPS = 60;
-const int WINNING_SCORE = 1;
+const int WINNING_SCORE = 5;
 
 int gameState = 0;
 
@@ -26,9 +26,9 @@ struct Paddle {
   int score;
 };
 
-struct Paddle player = {2, 24, 3, 14, 1, 0};
-struct Paddle computer = {arduboy.width()-4, 24, 3, 14, 1, 0};
-struct Ball ball = {62, 16, 4, 1, 1, 1, 1};
+struct Paddle player;
+struct Paddle computer;
+struct Ball ball;
 
 bool isEdgeHit(Paddle paddle) {
   return
@@ -36,7 +36,15 @@ bool isEdgeHit(Paddle paddle) {
     (ball.y > paddle.y + 10);
 }
 
+void resetGame() {
+  player = {2, 24, 3, 14, 1, 0};
+  computer = {arduboy.width()-4, 24, 3, 14, 1, 0};
+  ball = {62, 16, 4, 1, 1, 1, 1};
+  gameState = 0;
+}
+
 void setup() {
+  resetGame();
   arduboy.begin();
   arduboy.setFrameRate(FPS);
   arduboy.initRandomSeed();
@@ -57,6 +65,7 @@ void loop() {
         arduboy.setCursor(0, 0);
         arduboy.println("wow it's pong");
         arduboy.println("---===---");
+        arduboy.println("get 5 points");
         arduboy.println();
         arduboy.println("A - power shot");
         arduboy.println("B - fast move");
@@ -99,11 +108,23 @@ void loop() {
           if (ball.y > computer.y && computer.y + computer.height < arduboy.height() - 1) {
             computer.y += computer.speed;
           }
+        } else {
+          // random move
+          int randomMove = random(8);
+          if (randomMove == 1) {
+            if (ball.y < computer.y && computer.y + computer.height < arduboy.height() - 1) {
+              computer.y += computer.speed;
+            }
+            if (ball.y > computer.y && computer.y > 1) {
+              computer.y -= computer.speed;
+            }
+          }
         }
 
         //--- player collision
         if (
           ball.x < player.x + player.width
+          && ball.x > player.x
           && ball.y + ball.size > player.y
           && ball.y < player.y + player.height
           && ball.rightDir < 0
@@ -127,6 +148,7 @@ void loop() {
         //--- computer collision
         if (
           ball.x + ball.size > computer.x
+          && ball.x + ball.size < computer.x + computer.width
           && ball.y + ball.size > computer.y
           && ball.y < computer.y + computer.height
           && ball.rightDir > 0
@@ -203,9 +225,14 @@ void loop() {
     case 2: // win screen
       {
         arduboy.setCursor(0, 0);
-        arduboy.print("you win");
+        arduboy.println("cool, dude");
+        arduboy.println("---===---");
+        arduboy.println("everyone on earth");
+        arduboy.println("thinks you're neat");
+        arduboy.println();
+        arduboy.println("press A to play again");
         if (arduboy.justPressed(A_BUTTON)) {
-          gameState += 1;
+          resetGame();
         }
       }
       break;
@@ -213,9 +240,14 @@ void loop() {
     case 3: // game over screen
       {
         arduboy.setCursor(0, 0);
-        arduboy.print("game over");
+        arduboy.println("great job, bozo");
+        arduboy.println("---===---");
+        arduboy.println("the evil paddle");
+        arduboy.println("destroyed earth");
+        arduboy.println();
+        arduboy.println("press A to try again");
         if (arduboy.justPressed(A_BUTTON)) {
-          gameState = 0;
+          resetGame();
         }
       }
       break;
